@@ -1,0 +1,131 @@
+name: 🚨 Vulnerable Workflow - Credentials Exposure Demo
+
+# This workflow demonstrates the GitHub Actions checkout vulnerability
+# where credentials are persisted by default, creating a security risk
+
+on:
+  push:
+    branches: [ main, demo ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  vulnerable-build-and-publish:
+    runs-on: ubuntu-latest
+    
+    # WARNING: This job demonstrates INSECURE practices
+    # The default permissions are too broad and credentials are persisted
+    
+    steps:
+    # 🚨 VULNERABILITY: Using checkout WITHOUT persist-credentials: false
+    # This persists the GitHub token in .git/config, making it accessible
+    # to all subsequent steps in the workflow
+    - name: 🔓 Checkout code (VULNERABLE - credentials persisted)
+      uses: actions/checkout@v4
+      # Missing: persist-credentials: false
+      
+    # Demonstrate that credentials are accessible
+    - name: 🔍 Show Git Configuration (Credentials Exposed)
+      run: |
+        echo "🚨 SECURITY DEMO: Showing how credentials can be accessed"
+        echo "Git config contents:"
+        cat .git/config || echo "Could not read .git/config"
+        echo ""
+        echo "🔑 Looking for credential information..."
+        if grep -i "token" .git/config; then
+          echo "⚠️  Token found in git configuration!"
+        fi
+        if grep -i "credential" .git/config; then
+          echo "⚠️  Credential helper configuration found!"
+        fi
+        
+    # Setup Node.js
+    - name: 📦 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        registry-url: 'https://registry.npmjs.org'
+        
+    # Install dependencies
+    - name: 📥 Install dependencies
+      run: npm install
+      
+    # Run the vulnerable application
+    - name: 🏃 Run application (shows environment info)
+      run: npm start
+      
+    # Demonstrate credential extraction possibility
+    - name: 🚨 Simulate Credential Extraction
+      run: |
+        echo "🔥 ATTACK SIMULATION: How credentials could be extracted"
+        echo "=============================================="
+        echo "In a real attack, malicious code could:"
+        echo "1. Read GitHub token from .git/config"
+        echo "2. Access repository secrets through environment"
+        echo "3. Make API calls with stolen credentials"
+        echo "4. Modify code and push malicious changes"
+        echo ""
+        echo "🔍 Environment variables that might contain sensitive data:"
+        env | grep -E "(GITHUB|TOKEN|SECRET)" | head -10 || echo "No sensitive env vars visible (filtered by GitHub)"
+        echo ""
+        echo "📁 File system access demonstration:"
+        echo "Current working directory: $(pwd)"
+        echo "Git directory contents:"
+        ls -la .git/ 2>/dev/null | head -10 || echo "Git directory not accessible"
+        
+    # Build Docker image
+    - name: 🐳 Build Docker Image
+      run: |
+        echo "🔨 Building Docker image..."
+        docker build -t vulnerable-demo:latest .
+        echo "✅ Docker image built successfully"
+        
+    # Simulate NPM package publishing (without actually publishing)
+    - name: 📦 Simulate NPM Package Publish
+      run: |
+        echo "📤 Simulating NPM package publication..."
+        echo "In a real scenario, this would publish to NPM registry"
+        echo "Package info:"
+        npm pack --dry-run
+        echo ""
+        echo "🚨 With exposed credentials, a malicious actor could:"
+        echo "- Publish packages with your credentials"
+        echo "- Make packages appear legitimate"
+        echo "- Inject malicious code into your supply chain"
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        
+    # Simulate Docker image publishing (without actually publishing)  
+    - name: 🐳 Simulate Docker Image Push
+      run: |
+        echo "📤 Simulating Docker image push..."
+        echo "In a real scenario, this would push to Docker Hub"
+        echo "Image info:"
+        docker images vulnerable-demo:latest
+        echo ""
+        echo "🚨 With exposed credentials, a malicious actor could:"
+        echo "- Push compromised images to your registries"
+        echo "- Use your reputation to distribute malware"
+        echo "- Embed backdoors in container images"
+        
+    # Show final security warning
+    - name: ⚠️ Security Warning Summary
+      run: |
+        echo "🚨 SECURITY VULNERABILITY DEMONSTRATED"
+        echo "======================================"
+        echo ""
+        echo "This workflow shows how the default GitHub Actions checkout"
+        echo "behavior persists credentials, creating these risks:"
+        echo ""
+        echo "1. 🔓 GitHub tokens stored in .git/config"
+        echo "2. 🕵️  Accessible to any workflow step"
+        echo "3. 📦 Could be used to publish malicious packages"
+        echo "4. 🐳 Could be used to push compromised images"
+        echo "5. 🔑 Could access private repositories"
+        echo "6. 💾 Could exfiltrate secrets and tokens"
+        echo ""
+        echo "🛡️  MITIGATION: Use 'persist-credentials: false' in checkout action"
+        echo ""
+        echo "For more information, see:"
+        echo "https://github.com/actions/checkout/issues/485"
