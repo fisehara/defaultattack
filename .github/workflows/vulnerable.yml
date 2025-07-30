@@ -30,7 +30,7 @@ jobs:
     - name: Secret Scanning
       uses: trufflesecurity/trufflehog@main
       with:
-        extra_args: --image docker://${{ secrets.DOCKER_USERNAME }}/hello-world-app:latest --results=verified,unknown
+        extra_args: docker --image docker://${{ secrets.DOCKER_USERNAME }}/hello-world-app:latest --results=verified,unknown
 
 
     - name: Push Docker image
