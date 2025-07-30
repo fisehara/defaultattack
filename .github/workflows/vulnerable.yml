@@ -27,11 +27,13 @@ jobs:
         docker build -t ${{ secrets.DOCKER_USERNAME }}/hello-world-app:latest .
 
 
-    - name: Secret Scanning
-      uses: trufflesecurity/trufflehog@main
-      with:
-        extra_args: docker --image docker://${{ secrets.DOCKER_USERNAME }}/hello-world-app:latest --results=verified,unknown
-
+    # We run the official trufflehog docker image and mount the host's docker socket
+    # This allows trufflehog inside the container to see and scan other local images.
+    - name: Scan local Docker image for secrets
+      run: |
+        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+        trufflesecurity/trufflehog:latest \
+        docker --image ${{ secrets.DOCKER_USERNAME }}/hello-world-app:latest --fail
 
     - name: Push Docker image
       run: |
