@@ -1,0 +1,48 @@
+name: Safe Docker Build + Scan + Push
+
+on: push
+
+jobs:
+  docker-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+        submodules: 'recursive'
+        token: ${{ secrets.CI_CD_TOKEN }}
+    
+    - id: octoscan
+      name: Run octoscan
+      uses: synacktiv/action-octoscan@v1
+
+    - name: Upload SARIF file to GitHub
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: "${{steps.octoscan.outputs.sarif_output}}"
+        category: octoscan
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_TOKEN }}
+        
+    - name: Build Docker image
+      run: |
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/hello-world-app:latest .
+
+
+    # We run the official trufflehog docker image and mount the host's docker socket
+    # This allows trufflehog inside the container to see and scan other local images.
+    - name: Scan local Docker image for secrets
+      run: |
+        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+        trufflesecurity/trufflehog:latest \
+        docker --image docker://${{ secrets.DOCKER_USERNAME }}/hello-world-app:latest --results=verified --fail
+
+    - name: Push Docker image
+      run: |
+        docker push ${{ secrets.DOCKER_USERNAME }}/hello-world-app:latest
