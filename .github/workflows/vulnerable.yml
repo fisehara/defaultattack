@@ -29,11 +29,11 @@ jobs:
 
     # We run the official trufflehog docker image and mount the host's docker socket
     # This allows trufflehog inside the container to see and scan other local images.
-    # - name: Scan local Docker image for secrets
-    #   run: |
-    #     docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-    #     trufflesecurity/trufflehog:latest \
-    #     docker --image ${{ secrets.DOCKER_USERNAME }}/hello-world-app:latest --fail
+    - name: Scan local Docker image for secrets
+      run: |
+        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+        trufflesecurity/trufflehog:latest \
+        docker --image docker://${{ secrets.DOCKER_USERNAME }}/hello-world-app:latest
 
     - name: Push Docker image
       run: |
