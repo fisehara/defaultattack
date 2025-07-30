@@ -2,7 +2,7 @@ name: Docker Build and Push
 
 on:
   push:
-    branches: [ master, main, trufflehog ]
+    branches: [ master, main, trufflehog, octoscan ]
 
 jobs:
   docker-publish:
