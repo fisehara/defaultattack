@@ -29,6 +29,7 @@ jobs:
 
   # This job will run after the previous one and will use the source code from the artifact
   some-npm-publish:
+    needs: some-npm-prepare-test
     runs-on: ubuntu-latest
     steps: 
     - name: Setup Node.js
@@ -47,7 +48,7 @@ jobs:
       run: tar -xvf source.tar
 
     - name: Install dependencies
-      run: npm ci
+      run: npm install
 
     - name: Create npm package archive
       id: pack
