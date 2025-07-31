@@ -59,7 +59,7 @@ jobs:
       run: |
         docker run --rm -v $(pwd):/pwd \
         trufflesecurity/trufflehog:latest \
-        filesystem /pwd/${{ steps.pack.outputs.package_path }}
+        filesystem /pwd/${{ steps.pack.outputs.package_path }} --fail
 
     - name: Publish to NPM
       run: npm publish ./${{ steps.pack.outputs.package_path }}
