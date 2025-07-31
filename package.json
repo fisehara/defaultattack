@@ -1,6 +1,6 @@
 {
   "name": "defaultattack",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A simple Node.js web application that runs in Docker.",
   "type": "module",
   "main": "index.js",
